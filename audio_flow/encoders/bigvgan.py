@@ -33,7 +33,7 @@ class Mel_BigVGAN_44kHz(nn.Module):
 
         with torch.no_grad() and suppress_print():
             self.model.eval()
-            x = [get_mel_spectrogram(audio[:, i, :], self.model.h) for i in range(audio.shape[1])]
+            x = [get_mel_spectrogram(audio[:, i, :], self.model.h) for i in range(audio.shape[1])] # accept multiple ch
             x = torch.stack(x, dim=1)  # (b, c, f, t)
 
         x = rearrange(x, 'b c f t -> b c t f')  # (b, c, t, f)

@@ -1,0 +1,1 @@
+CUDA_VISIBLE_DEVICES=1 python train.py --config="./configs/text2music.yaml" --no_log

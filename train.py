@@ -97,6 +97,8 @@ def train(args) -> None:
         model.train()
         vt = model(t=t, x=xt, cond_dict=cond_dict)
 
+        from IPython import embed; embed(using=False); import os; os._exit(0)
+
         # 2.2 Loss
         loss = torch.mean((vt - ut) ** 2)
 

@@ -1,0 +1,12 @@
+__pycache__
+
+datasets
+downloaded_datasets
+checkpoints
+
+wandb
+example/data
+example/models
+
+*.png
+*.txt
