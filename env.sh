@@ -1,6 +1,7 @@
 pip install librosa==0.11.0
-pip install torch==2.6.0
-pip install torchaudio==2.7.0
+pip install torch==2.6.0 torchvision==0.21.0 torchaudio==2.6.0 --index-url https://download.pytorch.org/whl/cu118
+# pip install torch==2.6.0
+# pip install torchaudio==2.7.0
 pip install torchdiffeq==0.2.5
 pip install tqdm==4.67.1
 pip install einops==0.8.1
@@ -11,3 +12,4 @@ pip install descript-audio-codec
 pip install audidata==0.0.5
 pip install wandb==0.19.10
 pip install accelerate==1.6.0
+pip install transformers==4.45.2

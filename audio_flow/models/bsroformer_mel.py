@@ -14,6 +14,8 @@ from audio_flow.models.pad import pad1d, pad2d, unpad2d
 from audio_flow.models.patch import Patch1D, Patch2D
 from audio_flow.models.rope import build_rope
 
+from torch.nn.utils.rnn import pad_sequence
+
 
 @dataclass
 class Config:
@@ -21,6 +23,7 @@ class Config:
     name: str
 
     # Condition params
+    text_dim: int
     y_dim: int
     c_dim: int
     ct_dim: int
@@ -93,6 +96,11 @@ class BSRoformerMel(nn.Module):
         f_rope = build_rope(seq_len=2048, head_dim=self.head_dim)
         self.register_buffer(name="t_rope", tensor=t_rope)  # shape: (t, head_dim/2, 2)
         self.register_buffer(name="f_rope", tensor=f_rope)  # shape: (t, head_dim/2, 2)
+
+        text_rope = build_rope(seq_len=2048, head_dim=self.head_dim)
+        self.register_buffer(name="text_rope", tensor=text_rope)  # shape: (t, head_dim/2, 2)
+        self.text_emb = nn.Embedding(num_embeddings=30522, embedding_dim=512)
+        self.text_proj = nn.Linear(512, 384)
         
     def forward(
         self, 
@@ -110,6 +118,12 @@ class BSRoformerMel(nn.Module):
         Outputs:
             output: (b, c, t, f)
         """
+        from IPython import embed; embed(using=False); import os; os._exit(0)
+        # text embedding
+        if self.config.text_dim:
+            token = [torch.tensor(lst) for lst in cond_dict["token"]]
+            pad_token = pad_sequence(tensors, batch_first=True).to(x.device)
+            text_emb = self.text_emb(pad_token)
 
         # --- 1. Patchify input ---
         orig_shape = x.shape

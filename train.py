@@ -64,11 +64,11 @@ def train(args) -> None:
         ckpt_path=configs["train"]["resume_ckpt_path"]
     ).to(device)
 
-    # EMA (optional)
-    ema = deepcopy(model).to(device)
-    requires_grad(ema, False)
-    update_ema(ema, model, decay=0)  # Ensure EMA is initialized with synced weights
-    ema.eval()  # EMA model should always be in eval mode
+    # # EMA (optional)
+    # ema = deepcopy(model).to(device)
+    # requires_grad(ema, False)
+    # update_ema(ema, model, decay=0)  # Ensure EMA is initialized with synced weights
+    # ema.eval()  # EMA model should always be in eval mode
 
     # Optimizer
     optimizer, scheduler = get_optimizer_and_scheduler(
@@ -97,8 +97,6 @@ def train(args) -> None:
         model.train()
         vt = model(t=t, x=xt, cond_dict=cond_dict)
 
-        from IPython import embed; embed(using=False); import os; os._exit(0)
-
         # 2.2 Loss
         loss = torch.mean((vt - ut) ** 2)
 
@@ -106,7 +104,7 @@ def train(args) -> None:
         optimizer.zero_grad()  # Reset all parameter.grad to 0
         loss.backward()  # Update all parameter.grad
         optimizer.step()  # Update all parameters based on all parameter.grad
-        update_ema(ema, model, decay=0.999)
+        # update_ema(ema, model, decay=0.999)
 
         # 2.4 Learning rate scheduler
         if scheduler:
@@ -128,14 +126,14 @@ def train(args) -> None:
                     out_dir=Path("results", filename, config_name, f"steps={step}")
                 )
 
-            for split in ["train", "test"]:
-                validate(
-                    configs=configs,
-                    data_transform=data_transform,
-                    model=ema,
-                    split=split,
-                    out_dir=Path("results", filename, config_name, f"steps={step}_ema")
-                )
+            # for split in ["train", "test"]:
+            #     validate(
+            #         configs=configs,
+            #         data_transform=data_transform,
+            #         model=ema,
+            #         split=split,
+            #         out_dir=Path("results", filename, config_name, f"steps={step}_ema")
+            #     )
 
             if wandb_log:
                 wandb.log(
@@ -152,9 +150,9 @@ def train(args) -> None:
             torch.save(model.state_dict(), ckpt_path)
             print("Save model to {}".format(ckpt_path))
 
-            ckpt_path = Path(ckpts_dir, "step={}_ema.pth".format(step))
-            torch.save(ema.state_dict(), ckpt_path)
-            print("Save model to {}".format(ckpt_path))
+            # ckpt_path = Path(ckpts_dir, "step={}_ema.pth".format(step))
+            # torch.save(ema.state_dict(), ckpt_path)
+            # print("Save model to {}".format(ckpt_path))
 
         if step == configs["train"]["training_steps"]:
             break
@@ -167,7 +165,11 @@ def get_data_transform(configs: dict):
 
     name = configs["data_transform"]["name"]
 
-    if name == "Text2Music_Mel":
+    if name == "Text2Speech_Mel":
+        from audio_flow.data_transforms.text2speech import Text2Speech_Mel
+        return Text2Speech_Mel()
+
+    elif name == "Text2Music_Mel":
         from audio_flow.data_transforms.text2music import Text2Music_Mel
         return Text2Music_Mel()
 
@@ -222,7 +224,21 @@ def get_dataset(
 
     for name in configs[ds].keys():
 
-        if name == "GTZAN":
+        if name == "LJSpeech":
+            from audidata.io.crops import RandomCrop, StartCrop
+            from audidata.datasets import LJSpeech
+            from audidata.transforms import Mono, Normalize, TimeShift
+
+            dataset = LJSpeech(
+                root=configs[ds][name]["root"],
+                split=configs[ds][name]["split"],
+                sr=sr,
+                # crop=StartCrop(clip_duration=clip_duration), 
+                # transform=[Mono(), Normalize(), TimeShift(sr=sr, shift=(0., 0.5))],
+            )
+            return dataset
+
+        elif name == "GTZAN":
 
             from audidata.io.crops import RandomCrop, StartCrop
             from audio_flow.datasets.gtzan import GTZAN
